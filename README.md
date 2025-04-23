@@ -66,7 +66,7 @@ A **Streamlit** and **Plotly** powered interactive dashboard for visualizing stu
 
 4. **Generate synthetic data**
    ```bash
-   python career_data_2024_2025_v3.py
+   python generate-data.py
    ```
 
 5. **Run the dashboard**
