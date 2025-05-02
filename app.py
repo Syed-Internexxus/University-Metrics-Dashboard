@@ -1,7 +1,3 @@
-# career_outcomes_dashboard.py
-# ------------------------------------------------------------------
-#  Streamlit dashboard – Internexxus palette + bright gradient bg
-# ------------------------------------------------------------------
 import pandas as pd, numpy as np, streamlit as st
 import plotly.express as px, plotly.graph_objects as go
 import statsmodels.api as sm
@@ -108,6 +104,3 @@ def spark(data, y, color=CLR_MINT):
                       template="plotly_white")
     return fig
 
-# —— (remaining dashboard code is unchanged from the previous reply) ——
-#      Copy everything from TOP KPI cards down to the footer exactly
-#      as provided earlier.  Only the CSS above changed.
