@@ -1,6 +1,6 @@
 # career_outcomes_dashboard.py
 # ------------------------------------------------------------------
-#  Streamlit dashboard – clean, modern palette (light theme)
+#  Streamlit dashboard – minimalist, pro palette for university admins
 # ------------------------------------------------------------------
 import pandas as pd
 import numpy as np
@@ -9,68 +9,80 @@ import plotly.express as px
 import plotly.graph_objects as go
 import statsmodels.api as sm
 
-# ───── Color palette ─────────────────────────────────────────────
-BG_SOFT    = "#F7F9FB"      # app background
-TXT_MAIN   = "#2E2E2E"      # default (charcoal)
-TXT_SECOND = "#64748B"      # slate for captions/axes
+# ────────────────────────────────────────────────────────────────
+#  COLOR SYSTEM  ▸ neutral / accent / status
+# ────────────────────────────────────────────────────────────────
+BG        = "#FAFAFC"      # subtle off‑white background
+CARD      = "#FFFFFF"      # cards
+TXT_MAIN  = "#111827"      # charcoal
+TXT_SUB   = "#6B7280"      # muted gray
 
-CLR_BLUE   = "#3B82F6"      # primary accent
-CLR_GREEN  = "#10B981"      # success
-CLR_ORANGE = "#F97316"      # alerts / time-to‑job
-CLR_SLATE  = "#64748B"      # secondary
+ACCENT    = "#2563EB"      # blue  – primary highlights / lines
+SUCCESS   = "#059669"      # green – success metrics
+WARNING   = "#F59E0B"      # orange – durations / alerts
+NEUTRAL   = "#94A3B8"      # secondary
 
-CLR_CARD   = "#FFFFFF"
-SHADOW     = "0 2px 8px rgba(0,0,0,.05)"
+SHADOW    = "0 1px 6px rgba(0,0,0,.06)"
 
-# ───── Page meta ────────────────────────────────────────────────
+px.defaults.template = "plotly_white"
+px.defaults.color_discrete_sequence = [ACCENT, SUCCESS, WARNING, NEUTRAL]
+
+# ────────────────────────────────────────────────────────────────
+#  PAGE CONFIG  &  GLOBAL CSS
+# ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Career Outcomes Dashboard",
-    page_icon="📊",
+    page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ───── Global CSS ───────────────────────────────────────────────
 st.markdown(
     f"""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-    
-    html, body, .stApp, .block-container {{
-        font-family:'Poppins',sans-serif;
-        background:{BG_SOFT};
-        color:{TXT_MAIN};
-    }}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
-    /* Cards */
-    .card {{
-        background:{CLR_CARD};
-        padding:1.25rem 1.35rem;
-        border-radius:12px;
-        box-shadow:{SHADOW};
-    }}
-    .card h3 {{ font-size:1rem; color:{CLR_BLUE}; margin:0 0 .3rem 0; }}
-    .card h1 {{ font-size:2.3rem; margin:0; }}
-
-    .caption {{ font-size:.8rem; color:{TXT_SECOND}; margin-top:.3rem; }}
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] > div:first-child {{
-        background:{CLR_CARD};
-        box-shadow:{SHADOW};
-    }}
-
-    .stPlotlyChart {{ height:100%; }}
-    </style>
-    """,
+html, body, .stApp {{
+    background:{BG};
+    font-family:'Inter', sans-serif;
+    color:{TXT_MAIN};
+}}
+.card {{
+    background:{CARD};
+    padding:1.2rem 1.4rem;
+    border-radius:12px;
+    box-shadow:{SHADOW};
+}}
+.card h3 {{
+    margin:0 0 .4rem 0;
+    font-size:1rem;
+    font-weight:600;
+    color:{ACCENT};
+}}
+.card h1 {{
+    margin:0;
+    font-size:2.4rem;
+    line-height:1.15;
+}}
+.caption {{
+    font-size:.8rem;
+    color:{TXT_SUB};
+    margin-top:.35rem;
+}}
+/* sidebar */
+section[data-testid="stSidebar"] > div:first-child {{
+    background:{CARD};
+    box-shadow:{SHADOW};
+}}
+.stPlotlyChart {{ height:100%; }}
+</style>
+""",
     unsafe_allow_html=True,
 )
 
-# ───── Plotly defaults ──────────────────────────────────────────
-px.defaults.template = "plotly_white"
-px.defaults.color_discrete_sequence = [CLR_BLUE, CLR_GREEN, CLR_ORANGE, CLR_SLATE]
-
-# ───── Load dataset ─────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+#  LOAD DATA
+# ────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_df():
     df = pd.read_csv(
@@ -87,104 +99,122 @@ def load_df():
     return df
 
 
-df  = load_df()
-maj = sorted(df["Major"].unique())
-yrs = sorted(df["GraduationYear"].unique())
+df   = load_df()
+maj  = sorted(df["Major"].unique())
+yrs  = sorted(df["GraduationYear"].unique())
 
-# ───── Sidebar ──────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+#  SIDEBAR FILTERS
+# ────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("Filters")
-    majors_f = st.multiselect("Major", maj, maj)
-    years_f  = st.multiselect("Grad Year", yrs, yrs)
+    majors_f = st.multiselect("Majors", maj, maj)
+    years_f  = st.multiselect("Grad Years", yrs, yrs)
 
 df_f = df[df["Major"].isin(majors_f) & df["GraduationYear"].isin(years_f)]
 
-# ───── Helpers ──────────────────────────────────────────────────
-def line_axes(data, x, y, color):
-    fig = px.line(data, x=x, y=y)
-    fig.update_traces(line=dict(color=color, width=2.5), showlegend=False)
+# ────────────────────────────────────────────────────────────────
+#  HELPER PLOTS
+# ────────────────────────────────────────────────────────────────
+def mini_bar(data, x, y, color=ACCENT):
+    fig = px.bar(data, x=x, y=y)
+    fig.update_traces(marker_color=color, width=.6)
     fig.update_layout(
         height=110,
         margin=dict(l=0, r=0, t=0, b=0),
-        xaxis_title="Month",
-        yaxis_title="",
-        xaxis_tickangle=-45,
-        xaxis=dict(showgrid=False, tickfont=dict(color=TXT_SECOND)),
-        yaxis=dict(showgrid=False, tickfont=dict(color=TXT_SECOND)),
+        xaxis=dict(tickfont=dict(color=TXT_SUB), tickangle=-45, title=""),
+        yaxis=dict(tickfont=dict(color=TXT_SUB), title=""),
     )
     return fig
 
 
-def spark(data, y, color):
-    fig = px.line(data, y=y)
-    fig.update_traces(line=dict(color=color, width=2.5), showlegend=False)
+def mini_area(data, x, y, color=SUCCESS):
+    fig = px.area(data, x=x, y=y)
+    fig.update_traces(line=dict(color=color, width=2.5), fillcolor=f"rgba(5,150,105,.15)")
     fig.update_layout(
         height=110,
         margin=dict(l=0, r=0, t=0, b=0),
-        xaxis_visible=False,
-        yaxis_visible=False,
+        xaxis=dict(tickfont=dict(color=TXT_SUB), tickangle=-45, title=""),
+        yaxis=dict(tickfont=dict(color=TXT_SUB), title=""),
     )
+    return fig
+
+
+def sparkline(data, y, color):
+    fig = px.line(data, y=y)
+    fig.update_traces(line=dict(color=color, width=2.5), showlegend=False)
+    fig.update_layout(height=110, margin=dict(l=0, r=0, t=0, b=0), xaxis_visible=False, yaxis_visible=False)
     return fig
 
 
 header_fmt = dict(
-    fill_color=CLR_BLUE,
-    font=dict(color="#FFFFFF", size=12, family="Poppins"),
+    fill_color=ACCENT,
+    font=dict(color="#FFFFFF", size=12),
     align="left",
 )
 
-# ═════════ TOP KPI ══════════════════════════════════════════════
+# ═══════════════════ TOP KPI ROW ════════════════════════════════
 c1, c2, c3, c4 = st.columns(4, gap="large")
 
+# 1 ▸ Students (bar by month)
 with c1:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>Students</h3>", unsafe_allow_html=True)
     st.markdown(f"<h1>{df_f.shape[0]}</h1>", unsafe_allow_html=True)
     monthly = df_f.groupby("RegMonth").size().reset_index(name="cnt")
-    st.plotly_chart(line_axes(monthly, "RegMonth", "cnt", CLR_BLUE), use_container_width=True)
-    st.markdown("<p class='caption'>Monthly registrations</p></div>", unsafe_allow_html=True)
+    st.plotly_chart(mini_bar(monthly, "RegMonth", "cnt"), use_container_width=True)
+    st.markdown("<p class='caption'>New registrations by month</p></div>", unsafe_allow_html=True)
 
+# 2 ▸ FT placement rate (area, 3‑month centered median instead of rolling avg)
 with c2:
-    rate = df_f["FullTimePlacement"].mean()
+    rate_total = df_f["FullTimePlacement"].mean()
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>FT Placement Rate</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h1>{rate:.0%}</h1>", unsafe_allow_html=True)
-    roll = (
+    st.markdown(f"<h1>{rate_total:.0%}</h1>", unsafe_allow_html=True)
+    # centered 3‑month median
+    mp = (
         df_f.set_index("GraduationDate")["FullTimePlacement"]
-        .resample("M").mean().rolling(3).mean().dropna().reset_index()
+        .resample("M")
+        .median()
+        .rolling(window=3, center=True)
+        .median()
+        .dropna()
+        .reset_index()
     )
-    roll["Month"] = roll["GraduationDate"].dt.to_period("M").astype(str)
-    st.plotly_chart(line_axes(roll, "Month", "FullTimePlacement", CLR_GREEN), use_container_width=True)
-    st.markdown("<p class='caption'>3‑month rolling avg</p></div>", unsafe_allow_html=True)
+    mp["Month"] = mp["GraduationDate"].dt.to_period("M").astype(str)
+    st.plotly_chart(mini_area(mp, "Month", "FullTimePlacement"), use_container_width=True)
+    st.markdown("<p class='caption'>Centered 3‑month median</p></div>", unsafe_allow_html=True)
 
+# 3 ▸ Median days‑to‑job (sparkline)
 with c3:
     med_gap = int(df_f["DaysToFullTimeJob"].dropna().median())
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>Median Days‑to‑Job</h3>", unsafe_allow_html=True)
     st.markdown(f"<h1>{med_gap}</h1>", unsafe_allow_html=True)
-    gap_hist = (
+    dist = (
         df_f["DaysToFullTimeJob"]
         .dropna()
         .clip(upper=365)
-        .value_counts(bins=12)
+        .value_counts(bins=15)
         .sort_index()
         .reset_index(drop=True)
-        .rename("cnt")
+        .rename("v")
     )
-    st.plotly_chart(spark(gap_hist, "cnt", CLR_ORANGE), use_container_width=True)
-    st.markdown("<p class='caption'>Distribution ≤ 1 yr</p></div>", unsafe_allow_html=True)
+    st.plotly_chart(sparkline(dist, "v", WARNING), use_container_width=True)
+    st.markdown("<p class='caption'>≤ 12 month distribution</p></div>", unsafe_allow_html=True)
 
+# 4 ▸ Avg applications (sparkline)
 with c4:
     avg_apps = df_f["ApplicationsSubmitted"].mean()
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>Avg Applications</h3>", unsafe_allow_html=True)
     st.markdown(f"<h1>{avg_apps:.1f}</h1>", unsafe_allow_html=True)
-    by_major = df_f.groupby("Major")["ApplicationsSubmitted"].mean().reset_index(name="avg")
-    st.plotly_chart(spark(by_major, "avg", CLR_SLATE), use_container_width=True)
-    st.markdown("<p class='caption'>Mean per major</p></div>", unsafe_allow_html=True)
+    mj = df_f.groupby("Major")["ApplicationsSubmitted"].mean().reset_index(name="v")
+    st.plotly_chart(sparkline(mj, "v", NEUTRAL), use_container_width=True)
+    st.markdown("<p class='caption'>Per student</p></div>", unsafe_allow_html=True)
 
-# ═════════ SECOND ROW ═══════════════════════════════════════════
-g1, g2, g3 = st.columns([2.6, 1.8, 1.6], gap="large")
+# ═══════════════════ SECOND ROW ═════════════════════════════════
+g1, g2, g3 = st.columns([2.7, 1.7, 1.6], gap="large")
 
 with g1:
     stages = {
@@ -193,46 +223,48 @@ with g1:
         "Shortlisted": (df_f["ShortlistedCount"] > 0).sum(),
         "Hired": df_f["FullTimePlacement"].sum(),
     }
-    funnel = px.area(x=list(stages), y=list(stages.values()), color_discrete_sequence=[CLR_BLUE])
-    funnel.update_traces(line=dict(width=0))
-    funnel.update_layout(height=300, margin=dict(l=0, r=0, t=40, b=20), title="Pipeline Conversion")
-    st.plotly_chart(funnel, use_container_width=True)
+    fun = px.area(x=list(stages), y=list(stages.values()), color_discrete_sequence=[ACCENT])
+    fun.update_traces(line=dict(width=0))
+    fun.update_layout(height=300, margin=dict(l=0, r=0, t=40, b=20), title="Pipeline Conversion")
+    st.plotly_chart(fun, use_container_width=True)
 
 with g2:
-    summary = (
+    overview = (
         df_f.groupby("Major")
         .agg(
             Students=("StudentID", "count"),
             AvgApps=("ApplicationsSubmitted", "mean"),
-            InternshipRate=("InternshipPlacement", "mean"),
-            FTPlacement=("FullTimePlacement", "mean"),
+            Interns=("InternshipPlacement", "mean"),
+            FT=("FullTimePlacement", "mean"),
             MedianGap=("DaysToFullTimeJob", "median"),
         )
         .assign(
             AvgApps=lambda d: d["AvgApps"].round(1),
-            InternshipRate=lambda d: (d["InternshipRate"] * 100).round(1),
-            FTPlacement=lambda d: (d["FTPlacement"] * 100).round(1),
+            Interns=lambda d: (d["Interns"] * 100).round(1),
+            FT=lambda d: (d["FT"] * 100).round(1),
         )
         .reset_index()
     )
-    ft_color = [
-        CLR_GREEN if v >= 80 else "#A7F3D0" if v >= 70 else CLR_ORANGE if v >= 60 else "#FECACA"
-        for v in summary["FTPlacement"]
+    ft_colors = [
+        SUCCESS if v >= 80 else "#A7F3D0" if v >= 70 else WARNING if v >= 60 else "#FED7AA"
+        for v in overview["FT"]
     ]
-    cell_cols = [[CLR_CARD] * len(summary)] * 4 + [ft_color] + [[CLR_CARD] * len(summary)]
-    tbl = go.Figure(
+    cell_colors = [[CARD] * len(overview)] * 4 + [ft_colors] + [[CARD] * len(overview)]
+    table = go.Figure(
         go.Table(
-            header=header_fmt | dict(values=list(summary.columns)),
+            header=header_fmt | dict(values=list(overview.columns)),
             cells=dict(
-                values=[summary[c] for c in summary.columns],
-                fill_color=cell_cols,
-                font=dict(color=TXT_MAIN, family="Poppins"),
+                values=[overview[c] for c in overview.columns],
+                fill_color=cell_colors,
+                font=dict(color=TXT_MAIN),
                 align="left",
             ),
         )
     )
-    tbl.update_layout(height=360, margin=dict(l=0, r=0, t=40, b=20), title="Major Overview")
-    st.plotly_chart(tbl, use_container_width=True)
+    table.update_layout(
+        height=360, margin=dict(l=0, r=0, t=40, b=20), title="Major Overview"
+    )
+    st.plotly_chart(table, use_container_width=True)
 
 with g3:
     uni = (
@@ -248,16 +280,18 @@ with g3:
             header=header_fmt | dict(values=list(uni.columns)),
             cells=dict(
                 values=[uni[c] for c in uni.columns],
-                fill_color=[CLR_CARD] * len(uni.columns),
-                font=dict(color=TXT_MAIN, family="Poppins"),
+                fill_color=[CARD] * len(uni.columns),
+                font=dict(color=TXT_MAIN),
                 align="left",
             ),
         )
     )
-    uni_tbl.update_layout(height=360, margin=dict(l=0, r=0, t=40, b=20), title="Top Universities")
+    uni_tbl.update_layout(
+        height=360, margin=dict(l=0, r=0, t=40, b=20), title="Top Universities"
+    )
     st.plotly_chart(uni_tbl, use_container_width=True)
 
-# ═════════ BOTTOM ROW ═══════════════════════════════════════════
+# ═══════════════════ BOTTOM ROW ════════════════════════════════
 b1, b2, b3 = st.columns([1.4, 2.4, 2.2], gap="large")
 
 with b1:
@@ -266,7 +300,7 @@ with b1:
         names=["Placed", "Not Placed"],
         values=[placed, df_f.shape[0] - placed],
         hole=0.55,
-        color_discrete_sequence=[CLR_GREEN, CLR_SLATE],
+        color_discrete_sequence=[SUCCESS, NEUTRAL],
     )
     donut.update_traces(textinfo="none")
     donut.update_layout(height=310, margin=dict(l=0, r=0, t=40, b=20), title="Internship Outcome")
@@ -288,12 +322,12 @@ with b2:
             x=xs,
             y=m * xs + b_int,
             mode="lines",
-            line=dict(color=CLR_ORANGE, width=2),
+            line=dict(color=ACCENT, width=2),
             name="Trend",
         )
     )
     sc.update_layout(
-        height=310, margin=dict(l=0, r=0, t=40, b=20), title="Workshop → Interview ROI"
+        height=310, margin=dict(l=0, r=0, t=40, b=20), title="Workshop ➜ Interview ROI"
     )
     st.plotly_chart(sc, use_container_width=True)
 
@@ -313,9 +347,11 @@ with b3:
     )
     st.plotly_chart(box, use_container_width=True)
 
-# ───── Footer ───────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+#  FOOTER
+# ────────────────────────────────────────────────────────────────
 st.markdown(
-    "<div style='text-align:center;margin-top:25px;color:#94A3B8'>"
+    "<div style='text-align:center;margin-top:25px;color:#9CA3AF'>"
     "© 2025 University Career Insights Dashboard</div>",
     unsafe_allow_html=True,
 )
