@@ -8,13 +8,13 @@ import statsmodels.api as sm
 from datetime import datetime
 
 # ───── Brand palette ────────────────────────────────────────────
-CLR_MINT   = "#16D5A8"   # primary accent
-CLR_SKY_A  = "#C6E5F6"   # lightest blue
-CLR_SKY_B  = "#C5EBF0"   # aqua tint
-CLR_SKY_C  = "#D9F8F0"   # very light mint
-CLR_SKY_D  = "#BCD9FB"   # lavender/sky
-CLR_TEXT   = "#1F2B46"   # default text
-CLR_CARD   = "#FFFFFF"   # white tiles
+CLR_MINT   = "#16D5A8"
+CLR_SKY_A  = "#C6E5F6"
+CLR_SKY_B  = "#C5EBF0"
+CLR_SKY_C  = "#D9F8F0"
+CLR_SKY_D  = "#BCD9FB"
+CLR_TEXT   = "#1F2B46"
+CLR_CARD   = "#FFFFFF"
 CLR_SHADOW = "rgba(26,39,77,.09)"
 
 # ───── Page meta ───────────────────────────────────────────────
@@ -23,26 +23,21 @@ st.set_page_config(page_title="Career Outcomes Dashboard",
                    layout="wide",
                    initial_sidebar_state="expanded")
 
-# ───── Global CSS (forces light bg on every container) ─────────
+# ───── Global CSS ──────────────────────────────────────────────
 st.markdown(
 f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
-/* 1️⃣  Apply gradient to every main Streamlit layer */
 html, body, .stApp, .block-container, .main, 
 [data-testid="stAppViewContainer"] {{
     font-family:'Poppins',sans-serif;
     color:{CLR_TEXT};
-    background:{CLR_SKY_C};
     background: radial-gradient(ellipse at 25% 15%,
                                 {CLR_SKY_C} 0%,
                                 {CLR_SKY_B} 35%,
                                 {CLR_SKY_D} 70%,
                                 {CLR_SKY_A} 100%);
 }}
-
-/* 2️⃣  Cards */
 .card {{
     background:{CLR_CARD};
     padding:1.25rem 1.35rem;
@@ -54,8 +49,6 @@ html, body, .stApp, .block-container, .main,
 .card h3 {{ font-size:1rem; color:{CLR_MINT}; margin:0 0 .25rem 0; letter-spacing:.3px; }}
 .card h1 {{ font-size:2.25rem; margin:0; line-height:1.1; }}
 .caption  {{ font-size:.78rem; color:#667693; margin-top:.25rem; }}
-
-/* 3️⃣  Sidebar */
 section[data-testid="stSidebar"] > div:first-child {{
     background:{CLR_CARD};
     border-right:1px solid #E6EEF7;
@@ -63,19 +56,14 @@ section[data-testid="stSidebar"] > div:first-child {{
 .stSidebar header, .stSidebar h1, .stSidebar h2, .stSidebar h3 {{
     color:{CLR_MINT};
 }}
-
-/* 4️⃣  Plotly wrapper */
 .stPlotlyChart{{ height:100%; }}
-
-/* 5️⃣  Nice scrollbar */
 ::-webkit-scrollbar        {{ width:8px; }}
 ::-webkit-scrollbar-thumb  {{ background:{CLR_SKY_D}; border-radius:8px; }}
 </style>
 """,
 unsafe_allow_html=True)
 
-# ─── Optional Plotly defaults (brand colours) ───────────────────
-px.defaults.template                 = "plotly_white"
+px.defaults.template = "plotly_white"
 px.defaults.color_discrete_sequence  = [CLR_MINT, CLR_SKY_D, CLR_SKY_B, "#FFA629"]
 
 # ── Load dataset ────────────────────────────────────────────────
@@ -102,13 +90,16 @@ with st.sidebar:
 
 df_f = df[df["Major"].isin(majors_f) & df["GraduationYear"].isin(years_f)]
 
-# ── Helper sparkline ------------------------------------------------
-def spark(data, y, color=CLR_MINT):
-    fig = px.line(data, y=y)
+# ── Helper sparkline with AXES -------------------------------------
+def spark_with_axes(data, x, y, y_fmt="{:.0f}", color=CLR_MINT):
+    fig = px.line(data, x=x, y=y)
     fig.update_traces(showlegend=False, line=dict(color=color, width=2.5))
-    fig.update_layout(margin=dict(l=0,r=0,t=0,b=0),
-                      height=110,
-                      xaxis_visible=False, yaxis_visible=False)
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=110,
+        xaxis=dict(showgrid=False, title="", tickangle=0),
+        yaxis=dict(showgrid=True, title="", tickformat=y_fmt),
+    )
     return fig
 
 # ── Shared header format for Plotly tables -------------------------
@@ -125,9 +116,9 @@ with c1:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>Students</h3>", unsafe_allow_html=True)
     st.markdown(f"<h1>{df_f.shape[0]}</h1>", unsafe_allow_html=True)
-    st.plotly_chart(spark(df_f.groupby("RegMonth")
-                          .size().reset_index(name="cnt"), "cnt"),
-                    use_container_width=True)
+    reg_monthly = df_f.groupby("RegMonth").size().reset_index(name="cnt")
+    fig = spark_with_axes(reg_monthly, "RegMonth", "cnt", "{:.0f}", color=CLR_MINT)
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown("<p class='caption'>Monthly registrations</p></div>",
                 unsafe_allow_html=True)
 
@@ -139,8 +130,9 @@ with c2:
     rolling = (df_f.set_index("GraduationDate")["FullTimePlacement"]
                .resample("M").mean().rolling(3).mean()
                .dropna().reset_index())
-    st.plotly_chart(spark(rolling, "FullTimePlacement", CLR_SKY_D),
-                    use_container_width=True)
+    rolling["Month"] = rolling["GraduationDate"].dt.to_period("M").astype(str)
+    fig2 = spark_with_axes(rolling, "Month", "FullTimePlacement", "{:.0%}", color=CLR_SKY_D)
+    st.plotly_chart(fig2, use_container_width=True)
     st.markdown("<p class='caption'>3‑month rolling avg</p></div>",
                 unsafe_allow_html=True)
 
