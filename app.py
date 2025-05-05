@@ -85,19 +85,19 @@ px.defaults.color_discrete_sequence = [
 
 # Apply black text to ALL Plotly elements through template modification
 tmpl = pio.templates["plotly_white"].layout
-tmpl.font.color                  = CLR_TEXT
-tmpl.title.font.color            = CLR_TEXT
-tmpl.xaxis.color                 = CLR_TEXT
-tmpl.yaxis.color                 = CLR_TEXT
-tmpl.xaxis.title.font.color      = CLR_TEXT
-tmpl.yaxis.title.font.color      = CLR_TEXT
-tmpl.xaxis.tickfont.color        = CLR_TEXT
-tmpl.yaxis.tickfont.color        = CLR_TEXT
-tmpl.polar.angularaxis.tickfont.color = CLR_TEXT
-tmpl.polar.radialaxis.tickfont.color  = CLR_TEXT
-tmpl.coloraxis.colorbar.tickfont.color      = CLR_TEXT
-tmpl.coloraxis.colorbar.title.font.color    = CLR_TEXT
-tmpl.legend.font.color           = CLR_TEXT
+tmpl.font.color= CLR_TEXT
+tmpl.title.font.color= CLR_TEXT
+tmpl.xaxis.color= CLR_TEXT
+tmpl.yaxis.color= CLR_TEXT
+tmpl.xaxis.title.font.color= CLR_TEXT
+tmpl.yaxis.title.font.color= CLR_TEXT
+tmpl.xaxis.tickfont.color= CLR_TEXT
+tmpl.yaxis.tickfont.color= CLR_TEXT
+tmpl.polar.angularaxis.tickfont.color= CLR_TEXT
+tmpl.polar.radialaxis.tickfont.color= CLR_TEXT
+tmpl.coloraxis.colorbar.tickfont.color= CLR_TEXT
+tmpl.coloraxis.colorbar.title.font.color= CLR_TEXT
+tmpl.legend.font.color= CLR_TEXT
 
 pio.templates.default = "plotly_white"   # NEW ➜ ensure every go.Figure picks it up
 
@@ -129,7 +129,7 @@ def create_gauge_chart(value, title, thr, suffix="%"):
         gauge=dict(
             axis=dict(range=[0,100], tickwidth=1, tickcolor=CLR_TEXT),
             bar=dict(color=colors[0] if value<thr[0]
-                    else colors[1] if value<thr[1] else colors[2]),
+  else colors[1] if value<thr[1] else colors[2]),
             bgcolor=CLR_BG_ACCENT, borderwidth=2, bordercolor=CLR_CARD,
             steps=[
                 dict(range=[0,thr[0]],  color=hex_to_rgba(colors[0],.3)),
@@ -139,15 +139,15 @@ def create_gauge_chart(value, title, thr, suffix="%"):
         title=dict(text=title,font=dict(size=14,color=CLR_TEXT_SECONDARY)),
         number=dict(suffix=suffix,font=dict(size=26,color=CLR_TEXT))))
     fig.update_layout(template="plotly_white",              # NEW ➜
-                      height=130, margin=dict(l=10,r=10,t=30,b=10),
-                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font_color=CLR_TEXT)
+    height=130, margin=dict(l=10,r=10,t=30,b=10),
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    font_color=CLR_TEXT)
     return fig
 
 def create_area_chart(data, x, y, title, color=CLR_PRIMARY):
     fig = px.area(data, x=x, y=y)
     fig.update_traces(line=dict(width=2,color=color),
-                    fillcolor=hex_to_rgba(color,.2))
+  fillcolor=hex_to_rgba(color,.2))
     fig.update_layout(title=title, height=130, template="plotly_white",  # NEW ➜
         margin=dict(l=10,r=10,t=30,b=10), xaxis_title=None, yaxis_title=None,
         xaxis_showgrid=False, yaxis_showgrid=True,
@@ -187,8 +187,8 @@ with st.sidebar:
     st.markdown("- **Placement Rate**  \n- **Days‑to‑Job**  \n- **Pipeline Conversion**")
     with st.expander("How to Use"):
         st.markdown("1. **Filter** by major and graduation year  \n"
-                    "2. **Click** charts  \n3. **Hover** elements  \n"
-                    "4. **Download** insights")
+  "2. **Click** charts  \n3. **Hover** elements  \n"
+  "4. **Download** insights")
     st.caption("Last updated: May 5 2025")
 
 if not majors_f: majors_f = maj
@@ -208,8 +208,8 @@ with c1:
     st.markdown(f"<h1>{df_f.shape[0]:,}</h1>", unsafe_allow_html=True)
     quarterly = df_f.groupby("YearQuarter").size().reset_index(name="Students")
     st.plotly_chart(create_bar_chart(quarterly, "YearQuarter", "Students",
-                                    "Quarterly Registrations"),
-                    use_container_width=True)
+"Quarterly Registrations"),
+  use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 with c2:
@@ -217,7 +217,7 @@ with c2:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>FT Placement Rate</h3>", unsafe_allow_html=True)
     st.plotly_chart(create_gauge_chart(rate, "Overall Rate", [60, 80]),
-                    use_container_width=True)
+  use_container_width=True)
     yoy = df_f.groupby("GraduationYear")["FullTimePlacement"].mean() * 100
     change = yoy.iloc[-1] - yoy.iloc[-2] if len(yoy) > 1 else 0
     css = "text-success" if change >= 0 else "text-danger"
@@ -232,21 +232,21 @@ with c3:
     st.markdown(f"<h1>{med_gap}</h1>", unsafe_allow_html=True)
     dist = df_f["DaysToFullTimeJob"].dropna().clip(upper=365)
     hist = px.histogram(dist, nbins=15, opacity=.7,
-                        color_discrete_sequence=[hex_to_rgba(CLR_WARNING,.7)])
+      color_discrete_sequence=[hex_to_rgba(CLR_WARNING,.7)])
     if len(dist) > 0:
         h, edges = np.histogram(dist, bins=15, range=(0,365), density=True)
         centers  = (edges[:-1] + edges[1:]) / 2
         hist.add_scatter(x=centers,
-                        y=h*dist.value_counts().max()/max(h),
-                        mode="lines",
-                        line=dict(color=CLR_DANGER,width=2),
-                        name="Distribution")
+      y=h*dist.value_counts().max()/max(h),
+      mode="lines",
+      line=dict(color=CLR_DANGER,width=2),
+      name="Distribution")
     hist.update_layout(template="plotly_white",            # NEW ➜
-                       height=130, margin=dict(l=10,r=10,t=10,b=10),
-                       xaxis_showticklabels=False, yaxis_showticklabels=False,
-                       showlegend=False, paper_bgcolor="rgba(0,0,0,0)",
-                       plot_bgcolor="rgba(0,0,0,0)",
-                       font_color=CLR_TEXT)
+     height=130, margin=dict(l=10,r=10,t=10,b=10),
+     xaxis_showticklabels=False, yaxis_showticklabels=False,
+     showlegend=False, paper_bgcolor="rgba(0,0,0,0)",
+     plot_bgcolor="rgba(0,0,0,0)",
+     font_color=CLR_TEXT)
     hist.update_xaxes(tickfont=dict(color=CLR_TEXT))
     hist.update_yaxes(tickfont=dict(color=CLR_TEXT))
     st.plotly_chart(hist, use_container_width=True)
@@ -259,8 +259,8 @@ with c4:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>Interview Success Rate</h3>", unsafe_allow_html=True)
     st.plotly_chart(create_gauge_chart(ipa, "Interviews per 100 Applications",
-                                    [10, 20], suffix=""),
-                    use_container_width=True)
+[10, 20], suffix=""),
+  use_container_width=True)
     st.markdown(f"<p class='caption'>Avg {df_f['ApplicationsSubmitted'].mean():.1f} "
                 f"applications per student</p></div>", unsafe_allow_html=True)
 
@@ -289,9 +289,9 @@ with g1:
             hex_to_rgba(CLR_PRIMARY,.7), hex_to_rgba(CLR_PRIMARY,.6), CLR_SUCCESS]),
         connector=dict(line=dict(color=CLR_BG_ACCENT, width=1))))
     funnel.update_layout(height=400, margin=dict(l=10,r=10,t=10,b=10),
-                        font_color=CLR_TEXT,  # Ensure all text is black
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)")
+      font_color=CLR_TEXT,  # Ensure all text is black
+      paper_bgcolor="rgba(0,0,0,0)",
+      plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(funnel, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -303,41 +303,41 @@ with g2:
     with tab1:
         summary = (df_f.groupby("Major")
                 .agg(Students=("StudentID","count"),
-                        AvgApps=("ApplicationsSubmitted","mean"),
-                        AvgInterviews=("InterviewInvites","mean"),
-                        InternshipRate=("InternshipPlacement","mean"),
-                        FTPlacement=("FullTimePlacement","mean"),
-                        MedianDays=("DaysToFullTimeJob","median"))
+      AvgApps=("ApplicationsSubmitted","mean"),
+      AvgInterviews=("InterviewInvites","mean"),
+      InternshipRate=("InternshipPlacement","mean"),
+      FTPlacement=("FullTimePlacement","mean"),
+      MedianDays=("DaysToFullTimeJob","median"))
                 .assign(AvgApps=lambda d:d["AvgApps"].round(1),
-                        AvgInterviews=lambda d:d["AvgInterviews"].round(1),
-                        InternshipRate=lambda d:(d["InternshipRate"]*100).round(1),
-                        FTPlacement=lambda d:(d["FTPlacement"]*100).round(1))
+      AvgInterviews=lambda d:d["AvgInterviews"].round(1),
+      InternshipRate=lambda d:(d["InternshipRate"]*100).round(1),
+      FTPlacement=lambda d:(d["FTPlacement"]*100).round(1))
                 .reset_index())
         tbl = go.Figure(go.Table(
             header=dict(values=["Major","Students","Avg Apps","Avg Interviews",
-                                "Internship %","FT Placement %","Days to Job"],
-                        fill_color=CLR_PRIMARY, align="left",
-                        font=dict(color="#FFF",size=12,family="Inter")),
+              "Internship %","FT Placement %","Days to Job"],
+      fill_color=CLR_PRIMARY, align="left",
+      font=dict(color="#FFF",size=12,family="Inter")),
             cells=dict(values=[summary[col] for col in summary.columns],
-                    fill_color=CLR_CARD, align="left",
-                    font=dict(color=CLR_TEXT,family="Inter"))))
+  fill_color=CLR_CARD, align="left",
+  font=dict(color=CLR_TEXT,family="Inter"))))
         tbl.update_layout(height=360, margin=dict(l=10,r=10,t=10,b=10),
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)")
+      paper_bgcolor="rgba(0,0,0,0)",
+      plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(tbl, use_container_width=True)
 
     with tab2:
         time_data = (df_f.groupby(["Major","GraduationYear"])
-                    .agg(Placement=("FullTimePlacement","mean"))
-                    .reset_index())
+  .agg(Placement=("FullTimePlacement","mean"))
+  .reset_index())
         time_data["Placement"] *= 100
         line = px.line(time_data, x="GraduationYear", y="Placement",
-                    color="Major", markers=True)
+  color="Major", markers=True)
         line.update_layout(height=360, margin=dict(l=10,r=10,t=10,b=10),
-                        legend_title_text="Major", yaxis_range=[0,100],
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font_color=CLR_TEXT)  # Force text color
+      legend_title_text="Major", yaxis_range=[0,100],
+      paper_bgcolor="rgba(0,0,0,0)",
+      plot_bgcolor="rgba(0,0,0,0)",
+      font_color=CLR_TEXT)  # Force text color
         # Force axis text to black
         line.update_xaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
         line.update_yaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
@@ -357,40 +357,40 @@ with b1:
 
     with sub1:
         box = px.box(df_f.dropna(subset=["DaysToFullTimeJob"]),
-                    x="Major", y="DaysToFullTimeJob", color="Major",
-                    points="outliers")
+  x="Major", y="DaysToFullTimeJob", color="Major",
+  points="outliers")
         box.update_layout(height=400, margin=dict(l=10,r=10,t=10,b=10),
-                        xaxis_title=None, xaxis_tickangle=-45,
-                        showlegend=False,
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font_color=CLR_TEXT)  # Force text color
+      xaxis_title=None, xaxis_tickangle=-45,
+      showlegend=False,
+      paper_bgcolor="rgba(0,0,0,0)",
+      plot_bgcolor="rgba(0,0,0,0)",
+      font_color=CLR_TEXT)  # Force text color
         # Force axis text to black
         box.update_xaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
         box.update_yaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
         st.plotly_chart(box, use_container_width=True)
         st.markdown("<p class='caption'>Distribution of time‑to‑employment "
-                    "by major. Lower is better.</p>", unsafe_allow_html=True)
+  "by major. Lower is better.</p>", unsafe_allow_html=True)
 
     with sub2:
         uni = (df_f.groupby("University")
             .agg(Students=("StudentID","count"),
-                    Placement=("FullTimePlacement","mean"),
-                    MedianDays=("DaysToFullTimeJob","median"))
+  Placement=("FullTimePlacement","mean"),
+  MedianDays=("DaysToFullTimeJob","median"))
             .assign(Placement=lambda d:(d["Placement"]*100).round(1),
-                    MedianDays=lambda d:d["MedianDays"].fillna(-1).astype(int))
+  MedianDays=lambda d:d["MedianDays"].fillna(-1).astype(int))
             .sort_values("Placement",ascending=False).head(10)
             .reset_index())
         tbl = go.Figure(go.Table(
             header=dict(values=["University","Students","Placement %","Days to Job"],
-                        fill_color=CLR_CARD, align="left",
-                        font=dict(color=CLR_TEXT,family="Inter",size=14)),
+      fill_color=CLR_CARD, align="left",
+      font=dict(color=CLR_TEXT,family="Inter",size=14)),
             cells=dict(values=[uni[c] for c in uni.columns],
-                    fill_color=CLR_CARD, align="left",
-                    font=dict(color=CLR_TEXT,family="Inter"))))
+  fill_color=CLR_CARD, align="left",
+  font=dict(color=CLR_TEXT,family="Inter"))))
         tbl.update_layout(height=400, margin=dict(l=10,r=10,t=10,b=10),
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)")
+      paper_bgcolor="rgba(0,0,0,0)",
+      plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(tbl, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -401,31 +401,31 @@ with b2:
 
     with r1:
         sc = px.scatter(df_f, x="WorkshopAttendance", y="InterviewInvites",
-                        color="Major", size="ApplicationsSubmitted",
-                        hover_data=["InternshipPlacement","FullTimePlacement"])
+      color="Major", size="ApplicationsSubmitted",
+      hover_data=["InternshipPlacement","FullTimePlacement"])
         reg = sm.OLS(df_f["InterviewInvites"],
-                    sm.add_constant(df_f["WorkshopAttendance"])).fit()
+  sm.add_constant(df_f["WorkshopAttendance"])).fit()
         m, b_int = reg.params["WorkshopAttendance"], reg.params["const"]
         xs = np.array([df_f["WorkshopAttendance"].min(),
-                    df_f["WorkshopAttendance"].max()])
+  df_f["WorkshopAttendance"].max()])
         sc.add_trace(go.Scatter(x=xs, y=m*xs+b_int, mode="lines",
-                                line=dict(color=CLR_DANGER,width=2,dash="dash"),
-                                name="Trend"))
+              line=dict(color=CLR_DANGER,width=2,dash="dash"),
+              name="Trend"))
         sc.add_annotation(x=xs.max()*0.8, y=df_f["InterviewInvites"].max()*0.9,
-                        text=f"Each workshop increases<br>interview chances "
-                            f"by {m:.2f}×",
-                        showarrow=True, arrowhead=2,
-                        arrowcolor=CLR_TEXT_SECONDARY, arrowsize=1,
-                        arrowwidth=1.5, bordercolor=CLR_CARD,
-                        borderwidth=1, borderpad=4,
-                        bgcolor=CLR_CARD, opacity=.8,
-                        font=dict(color=CLR_TEXT))  # Ensure annotation text is black
+      text=f"Each workshop increases<br>interview chances "
+          f"by {m:.2f}×",
+      showarrow=True, arrowhead=2,
+      arrowcolor=CLR_TEXT_SECONDARY, arrowsize=1,
+      arrowwidth=1.5, bordercolor=CLR_CARD,
+      borderwidth=1, borderpad=4,
+      bgcolor=CLR_CARD, opacity=.8,
+      font=dict(color=CLR_TEXT))  # Ensure annotation text is black
         sc.update_layout(height=400, margin=dict(l=10,r=10,t=10,b=10),
-                        xaxis_title="Workshops Attended",
-                        yaxis_title="Interview Invitations",
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font_color=CLR_TEXT)  # Force text color
+      xaxis_title="Workshops Attended",
+      yaxis_title="Interview Invitations",
+      paper_bgcolor="rgba(0,0,0,0)",
+      plot_bgcolor="rgba(0,0,0,0)",
+      font_color=CLR_TEXT)  # Force text color
         # Force axis text to black
         sc.update_xaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
         sc.update_yaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
@@ -433,8 +433,8 @@ with b2:
         sc.update_layout(legend_font=dict(color=CLR_TEXT))
         st.plotly_chart(sc, use_container_width=True)
         st.markdown("<p class='caption'>Students who attend more workshops "
-                    "receive significantly more interview invitations</p>",
-                    unsafe_allow_html=True)
+  "receive significantly more interview invitations</p>",
+  unsafe_allow_html=True)
 
     with r2:
         if "StartingSalary" in df_f.columns:
@@ -442,25 +442,25 @@ with b2:
             fig = go.Figure()
             for m in salary["Major"].unique():
                 fig.add_trace(go.Violin(
-                    x=[m]*len(salary[salary["Major"]==m]),
-                    y=salary[salary["Major"]==m]["StartingSalary"],
-                    name=m, box_visible=True, meanline_visible=True,
-                    points="outliers"))
+  x=[m]*len(salary[salary["Major"]==m]),
+  y=salary[salary["Major"]==m]["StartingSalary"],
+  name=m, box_visible=True, meanline_visible=True,
+  points="outliers"))
             fig.update_layout(height=400, margin=dict(l=10,r=10,t=10,b=10),
-                            xaxis_title="Major",
-                            yaxis_title="Starting Salary ($)",
-                            xaxis_tickangle=-45, showlegend=False,
-                            yaxis_tickformat="$,.0f",
-                            paper_bgcolor="rgba(0,0,0,0)",
-                            plot_bgcolor="rgba(0,0,0,0)",
-                            font_color=CLR_TEXT)  # Force text color
+          xaxis_title="Major",
+          yaxis_title="Starting Salary ($)",
+          xaxis_tickangle=-45, showlegend=False,
+          yaxis_tickformat="$,.0f",
+          paper_bgcolor="rgba(0,0,0,0)",
+          plot_bgcolor="rgba(0,0,0,0)",
+          font_color=CLR_TEXT)  # Force text color
             # Force axis text to black
             fig.update_xaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
             fig.update_yaxes(tickfont=dict(color=CLR_TEXT), title_font=dict(color=CLR_TEXT))
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("<p class='caption'>Salary distribution by major shows "
-                        "significant variation between fields</p>",
-                        unsafe_allow_html=True)
+      "significant variation between fields</p>",
+      unsafe_allow_html=True)
         else:
             st.warning("Salary data is not available in the dataset")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -482,7 +482,7 @@ with col_outcome:
                 color_discrete_sequence=["#00B8A9","#87CEEB"])
     donut.update_traces(textinfo="none")
     donut.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
-                        title="Internship Outcome")
+      title="Internship Outcome")
     st.plotly_chart(donut, use_container_width=True)
     st.caption("Internships boost FT conversion; target ≥ 70%")
     st.markdown(f"<p class='caption'><span class='semibold'>Key Insight:</span> "
@@ -497,50 +497,50 @@ with col_comp:
             tabs = st.tabs(majors_f)
             for i, m in enumerate(majors_f):
                 with tabs[i]:
-                    d = df_f[df_f["Major"]==m]
-                    l, r = st.columns(2)
-                    with l:
-                        st.markdown(f"### {m} Overview")
-                        st.markdown(f"**Total Students:** {len(d)}")
-                        st.markdown(f"**Placement Rate:** "
-                                    f"{d['FullTimePlacement'].mean()*100:.1f}%")
-                        st.markdown(f"**Median Days to Job:** "
-                                    f"{int(d['DaysToFullTimeJob'].dropna().median())}")
-                        st.markdown(f"**Internship Rate:** "
-                                    f"{d['InternshipPlacement'].mean()*100:.1f}%")
-                    with r:
-                        stats = {
-                            "Metrics":["Applications","Interviews","Workshops",
-                                    "Internships","Placement"],
-                            m:[d["ApplicationsSubmitted"].mean()/df_f["ApplicationsSubmitted"].mean()*100,
-                            d["InterviewInvites"].mean()/df_f["InterviewInvites"].mean()*100,
-                            d["WorkshopAttendance"].mean()/df_f["WorkshopAttendance"].mean()*100,
-                            d["InternshipPlacement"].mean()/df_f["InternshipPlacement"].mean()*100,
-                            d["FullTimePlacement"].mean()/df_f["FullTimePlacement"].mean()*100],
-                            "Average":[100]*5
-                        }
-                        radar_df = pd.DataFrame(stats)
-                        rp = px.line_polar(radar_df,
-                                        r=radar_df[m], theta=radar_df["Metrics"],
-                                        line_close=True)
-                        rp.update_traces(fill="toself",
-                                        fillcolor=hex_to_rgba(CLR_PRIMARY,.25))
-                        rp.add_trace(go.Scatterpolar(r=[100]*5,
-                                                    theta=radar_df["Metrics"],
-                                                    fill="toself", name="Average",
-                                                    fillcolor=hex_to_rgba(CLR_SECONDARY,.125),
-                                                    line=dict(color=CLR_SECONDARY)))
-                        rp.update_layout(
-                            polar=dict(
-                                radialaxis=dict(visible=True, range=[0,150],
-                                                tickfont=dict(color=CLR_TEXT)),
-                                angularaxis=dict(tickfont=dict(color=CLR_TEXT))),
-                            showlegend=False, height=300,
-                            margin=dict(l=10,r=10,t=10,b=10),
-                            paper_bgcolor="rgba(0,0,0,0)")
-                        st.plotly_chart(rp, use_container_width=True)
-                        st.caption("Performance relative to cohort average "
-                                "(100 % = overall baseline)")
+  d = df_f[df_f["Major"]==m]
+  l, r = st.columns(2)
+  with l:
+      st.markdown(f"### {m} Overview")
+      st.markdown(f"**Total Students:** {len(d)}")
+      st.markdown(f"**Placement Rate:** "
+f"{d['FullTimePlacement'].mean()*100:.1f}%")
+      st.markdown(f"**Median Days to Job:** "
+f"{int(d['DaysToFullTimeJob'].dropna().median())}")
+      st.markdown(f"**Internship Rate:** "
+f"{d['InternshipPlacement'].mean()*100:.1f}%")
+  with r:
+      stats = {
+          "Metrics":["Applications","Interviews","Workshops",
+"Internships","Placement"],
+          m:[d["ApplicationsSubmitted"].mean()/df_f["ApplicationsSubmitted"].mean()*100,
+          d["InterviewInvites"].mean()/df_f["InterviewInvites"].mean()*100,
+          d["WorkshopAttendance"].mean()/df_f["WorkshopAttendance"].mean()*100,
+          d["InternshipPlacement"].mean()/df_f["InternshipPlacement"].mean()*100,
+          d["FullTimePlacement"].mean()/df_f["FullTimePlacement"].mean()*100],
+          "Average":[100]*5
+      }
+      radar_df = pd.DataFrame(stats)
+      rp = px.line_polar(radar_df,
+    r=radar_df[m], theta=radar_df["Metrics"],
+    line_close=True)
+      rp.update_traces(fill="toself",
+    fillcolor=hex_to_rgba(CLR_PRIMARY,.25))
+      rp.add_trace(go.Scatterpolar(r=[100]*5,
+                theta=radar_df["Metrics"],
+                fill="toself", name="Average",
+                fillcolor=hex_to_rgba(CLR_SECONDARY,.125),
+                line=dict(color=CLR_SECONDARY)))
+      rp.update_layout(
+          polar=dict(
+              radialaxis=dict(visible=True, range=[0,150],
+            tickfont=dict(color=CLR_TEXT)),
+              angularaxis=dict(tickfont=dict(color=CLR_TEXT))),
+          showlegend=False, height=300,
+          margin=dict(l=10,r=10,t=10,b=10),
+          paper_bgcolor="rgba(0,0,0,0)")
+      st.plotly_chart(rp, use_container_width=True)
+      st.caption("Performance relative to cohort average "
+              "(100 % = overall baseline)")
         else:
             st.warning("Select at least one major to view detailed analysis")
         st.markdown("</div>", unsafe_allow_html=True)
