@@ -170,100 +170,100 @@ with c4:
 g1, g2, g3 = st.columns([2.5, 1.8, 1.7], gap="large")
 
 with g1:
-stages = {
-"Registered" : df_f.shape[0],
-"Applicants" : (df_f["ApplicationsSubmitted"] > 0).sum(),
-"Shortlisted": (df_f["ShortlistedCount"]  > 0).sum(),
-"Hired"      : df_f["FullTimePlacement"].sum(),
-}
-funnel = px.area(x=list(stages), y=list(stages.values()))
-funnel.update_traces(marker=dict(color=CLR_MINT), line=dict(width=0))
-funnel.update_layout(height=300, margin=dict(l=0,r=0,t=40,b=20),
-title="Pipeline Conversion")
-st.plotly_chart(funnel, use_container_width=True)
+  stages = {
+  "Registered" : df_f.shape[0],
+  "Applicants" : (df_f["ApplicationsSubmitted"] > 0).sum(),
+  "Shortlisted": (df_f["ShortlistedCount"]  > 0).sum(),
+  "Hired"      : df_f["FullTimePlacement"].sum(),
+  }
+  funnel = px.area(x=list(stages), y=list(stages.values()))
+  funnel.update_traces(marker=dict(color=CLR_MINT), line=dict(width=0))
+  funnel.update_layout(height=300, margin=dict(l=0,r=0,t=40,b=20),
+  title="Pipeline Conversion")
+  st.plotly_chart(funnel, use_container_width=True)
 with st.expander("ℹ️ How to read"):
-st.write("- **Registered**: total filtered studentsn"
-"- **Applicants**: submitted ≥1 applicationn"
-"- **Shortlisted**: received ≥1 shortlistn"
-"- **Hired**: accepted FT offers")
+  st.write("- **Registered**: total filtered studentsn"
+  "- **Applicants**: submitted ≥1 applicationn"
+  "- **Shortlisted**: received ≥1 shortlistn"
+  "- **Hired**: accepted FT offers")
 
 with g2:
-summary = (df_f.groupby("Major")
-.agg(Students=("StudentID","count"),
-AvgApps=("ApplicationsSubmitted","mean"),
-InternshipRate=("InternshipPlacement","mean"),
-FTPlacement=("FullTimePlacement","mean"),
-MedianGap=("DaysToFullTimeJob","median"))
-.assign(AvgApps=lambda d:d.round(1),
-InternshipRate=lambda d:(d["InternshipRate"]*100).round(1),
-FTPlacement=lambda d:(d["FTPlacement"]*100).round(1))
-.reset_index())
-col_scale = ["#1F7536" if v>=80 else "#5CA02C" if v>=70
-else "#FFAE42" if v>=60 else "#D64C4C"
-for v in summary["FTPlacement"]]
-cell_cols = [[CLR_CARD]*len(summary)]*4 + [col_scale] + [[CLR_CARD]*len(summary)]
-tbl = go.Figure(go.Table(header=header_fmt | dict(values=list(summary.columns)),
-cells=dict(values=[summary[c] for c in summary.columns],
-fill_color=cell_cols,
-font=dict(color=CLR_TEXT,family="Poppins"),
-align="left")))
-tbl.update_layout(height=360, margin=dict(l=0,r=0,t=40,b=20),
-title="Major Overview")
-st.plotly_chart(tbl, use_container_width=True)
+  summary = (df_f.groupby("Major")
+  .agg(Students=("StudentID","count"),
+  AvgApps=("ApplicationsSubmitted","mean"),
+  InternshipRate=("InternshipPlacement","mean"),
+  FTPlacement=("FullTimePlacement","mean"),
+  MedianGap=("DaysToFullTimeJob","median"))
+  .assign(AvgApps=lambda d:d.round(1),
+  InternshipRate=lambda d:(d["InternshipRate"]*100).round(1),
+  FTPlacement=lambda d:(d["FTPlacement"]*100).round(1))
+  .reset_index())
+  col_scale = ["#1F7536" if v>=80 else "#5CA02C" if v>=70
+  else "#FFAE42" if v>=60 else "#D64C4C"
+  for v in summary["FTPlacement"]]
+  cell_cols = [[CLR_CARD]*len(summary)]*4 + [col_scale] + [[CLR_CARD]*len(summary)]
+  tbl = go.Figure(go.Table(header=header_fmt | dict(values=list(summary.columns)),
+  cells=dict(values=[summary[c] for c in summary.columns],
+  fill_color=cell_cols,
+  font=dict(color=CLR_TEXT,family="Poppins"),
+  align="left")))
+  tbl.update_layout(height=360, margin=dict(l=0,r=0,t=40,b=20),
+  title="Major Overview")
+  st.plotly_chart(tbl, use_container_width=True)
 
 with g3:
-uni = (df.groupby("University")
-.agg(Students=("StudentID","count"),
-Placement=("FullTimePlacement","mean"))
-.assign(Placement=lambda d:(d["Placement"]*100).round(1))
-.sort_values("Placement",ascending=False).head(7).reset_index())
-uni_tbl = go.Figure(go.Table(header=header_fmt | dict(values=list(uni.columns)),
-cells=dict(values=[uni[c] for c in uni.columns],
-fill_color=[CLR_CARD]*len(uni.columns),
-font=dict(color=CLR_TEXT,family="Poppins"),
-align="left")))
-uni_tbl.update_layout(height=360, margin=dict(l=0,r=0,t=40,b=20),
-title="Top Universities")
-st.plotly_chart(uni_tbl, use_container_width=True)
+  uni = (df.groupby("University")
+  .agg(Students=("StudentID","count"),
+  Placement=("FullTimePlacement","mean"))
+  .assign(Placement=lambda d:(d["Placement"]*100).round(1))
+  .sort_values("Placement",ascending=False).head(7).reset_index())
+  uni_tbl = go.Figure(go.Table(header=header_fmt | dict(values=list(uni.columns)),
+  cells=dict(values=[uni[c] for c in uni.columns],
+  fill_color=[CLR_CARD]*len(uni.columns),
+  font=dict(color=CLR_TEXT,family="Poppins"),
+  align="left")))
+  uni_tbl.update_layout(height=360, margin=dict(l=0,r=0,t=40,b=20),
+  title="Top Universities")
+  st.plotly_chart(uni_tbl, use_container_width=True)
 
 # ═════════ BOTTOM ROW ══════════════════════════════════════════
 
 b1, b2, b3 = st.columns([1.4,2.4,2.2], gap="large")
 
 with b1:
-placed = df_f["InternshipPlacement"].sum()
-donut = px.pie(names=["Placed","Not Placed"],
-values=[placed, df_f.shape[0]-placed],
-hole=0.55,
-color_discrete_sequence=[CLR_MINT, CLR_SKY_B])
-donut.update_traces(textinfo="none")
-donut.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
-title="Internship Outcome")
-st.plotly_chart(donut, use_container_width=True)
-st.caption("Internships boost FT conversion; target ≥ 70%")
+  placed = df_f["InternshipPlacement"].sum()
+  donut = px.pie(names=["Placed","Not Placed"],
+  values=[placed, df_f.shape[0]-placed],
+  hole=0.55,
+  color_discrete_sequence=[CLR_MINT, CLR_SKY_B])
+  donut.update_traces(textinfo="none")
+  donut.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
+  title="Internship Outcome")
+  st.plotly_chart(donut, use_container_width=True)
+  st.caption("Internships boost FT conversion; target ≥ 70%")
 
 with b2:
-sc = px.scatter(df_f, x="WorkshopAttendance", y="InterviewInvites",
-color="Major")
-reg = sm.OLS(df_f["InterviewInvites"],
-sm.add_constant(df_f["WorkshopAttendance"])).fit()
-m, b_int = reg.params["WorkshopAttendance"], reg.params["const"]
-xs = np.array([df_f["WorkshopAttendance"].min(),
-df_f["WorkshopAttendance"].max()])
-sc.add_trace(go.Scatter(x=xs, y=m*xs+b_int, mode="lines",
-line=dict(color="#FFD166"), name="Trend"))
-sc.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
-title="Workshop → Interview ROI")
-st.plotly_chart(sc, use_container_width=True)
-st.caption("Trend shows ~25‑30 % invite lift for workshop attendees")
+  sc = px.scatter(df_f, x="WorkshopAttendance", y="InterviewInvites",
+  color="Major")
+  reg = sm.OLS(df_f["InterviewInvites"],
+  sm.add_constant(df_f["WorkshopAttendance"])).fit()
+  m, b_int = reg.params["WorkshopAttendance"], reg.params["const"]
+  xs = np.array([df_f["WorkshopAttendance"].min(),
+  df_f["WorkshopAttendance"].max()])
+  sc.add_trace(go.Scatter(x=xs, y=m*xs+b_int, mode="lines",
+  line=dict(color="#FFD166"), name="Trend"))
+  sc.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
+  title="Workshop → Interview ROI")
+  st.plotly_chart(sc, use_container_width=True)
+  st.caption("Trend shows ~25‑30 % invite lift for workshop attendees")
 
 with b3:
-box = px.box(df_f.dropna(subset=["DaysToFullTimeJob"]),
-x="Major", y="DaysToFullTimeJob", color="Major")
-box.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
-title="Days to FT Job by Major")
-st.plotly_chart(box, use_container_width=True)
-st.caption("Long tails (> 200 d) highlight majors needing extra support")
+  box = px.box(df_f.dropna(subset=["DaysToFullTimeJob"]),
+  x="Major", y="DaysToFullTimeJob", color="Major")
+  box.update_layout(height=310, margin=dict(l=0,r=0,t=40,b=20),
+  title="Days to FT Job by Major")
+  st.plotly_chart(box, use_container_width=True)
+  st.caption("Long tails (> 200 d) highlight majors needing extra support")
 
 # ── Footer ─────────────────────────────────────────────────────
 
