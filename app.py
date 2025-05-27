@@ -373,7 +373,7 @@ with c4:
     total_apps = df_f["ApplicationsSubmitted"].sum()
     ipa = (df_f["InterviewInvites"].sum() / total_apps * 100) if total_apps else 0
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<h3"> Interview Conversion Rate</h3>", unsafe_allow_html=True)
+    st.markdown("<h3> Interview Conversion Rate</h3>", unsafe_allow_html=True)
     st.plotly_chart(create_gauge_chart(ipa, "Interviews per 100 Applications",
                                     [10, 20], suffix=""),
                     use_container_width=True)
