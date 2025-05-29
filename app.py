@@ -8,20 +8,25 @@ from plotly.subplots import make_subplots
 import statsmodels.api as sm
 from datetime import datetime
 
-CLR_PRIMARY = "#1E3A8A"
-CLR_SECONDARY = "#64748B"
-CLR_SUCCESS = "#059669"
-CLR_WARNING = "#D97706"
-CLR_DANGER = "#DC2626"
-CLR_ACCENT = "#7C3AED"
-CLR_BG_LIGHT = "#F8FAFC"
-CLR_BG_ACCENT = "#E2E8F0"
-CLR_CARD = "#FFFFFF"
-CLR_TEXT = "#000000"
-CLR_TEXT_SECONDARY = "#475569"
-CLR_SHADOW = "rgba(15,23,42,.08)"
-CLR_GOLD = "#FBBF24"
-CLR_EMERALD = "#10B981"
+# Brand palette (updated)
+CLR_PRIMARY         = "#18326F"   # Biscay
+CLR_SECONDARY       = "#6288CE"   # Danube
+CLR_ACCENT          = "#16D5A8"   # Java
+CLR_BG_LIGHT        = "#CCF0E8"   # Cornflower Blue
+CLR_BG_ACCENT       = "#87B2FF"   # Sky
+
+# Semantic colors (unchanged)
+CLR_SUCCESS         = "#059669"
+CLR_WARNING         = "#D97706"
+CLR_DANGER          = "#DC2626"
+CLR_GOLD            = "#FBBF24"
+CLR_EMERALD         = "#10B981"
+
+CLR_CARD            = "#FFFFFF"
+CLR_TEXT            = "#000000"
+CLR_TEXT_SECONDARY  = "#475569"
+CLR_SHADOW          = "rgba(15,23,42,.08)"
+
 
 def hex_to_rgba(hex_color: str, alpha: float) -> str:
     hex_color = hex_color.lstrip("#")
@@ -126,7 +131,15 @@ section[data-testid="stSidebar"]>div:first-child {{
     border-left:3px solid {CLR_PRIMARY};
 }}
 
-</style>
+/* make each Streamlit column a full-height flex container */
+.stColumns > div > .block-container {{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;  /* top content + bottom KPI box */
+}}
+
+
+</style>    
 """, unsafe_allow_html=True)
 
 px.defaults.template = "plotly_white"
@@ -225,46 +238,47 @@ st.markdown("<div class='section-header'>📊 Executive Dashboard - Key Performa
 c1, c2, c3, c4 = st.columns([3,1,1,1], gap="medium")
 
 with c1:
-    st.markdown("<h3 style='color:black;'> Total Student Cohort</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h1 style='color:black;'>{df_f.shape[0]:,}</h1>", unsafe_allow_html=True)
-    quarterly = df_f.groupby("YearQuarter").size().reset_index(name="Students")
-    fig_cum = create_cumulative_bar_chart(quarterly, "YearQuarter", "Students", "Cumulative Student Growth by Quarter")
-    fig_cum.update_traces(selector=dict(type="bar"), textposition="outside", cliponaxis=False)
-    st.plotly_chart(fig_cum, use_container_width=True)
+   st.markdown("<h3 style='color:black;'> Total Student Cohort</h3>", unsafe_allow_html=True)
+   st.markdown(f"<h1 style='color:black;'>{df_f.shape[0]:,}</h1>", unsafe_allow_html=True)
+   quarterly = df_f.groupby("YearQuarter").size().reset_index(name="Students")
+   fig_cum = create_cumulative_bar_chart(quarterly, "YearQuarter", "Students", "Cumulative Student Growth by Quarter")
+   fig_cum.update_traces(selector=dict(type="bar"), textposition="outside", cliponaxis=False)
+   st.plotly_chart(fig_cum, use_container_width=True)
+   st.markdown(f"<div class='kpi-insight'><strong>📊 Growth:</strong> {quarterly['Students'].iloc[-1]} students in latest quarter<br><strong>🎯 Trend:</strong> Consistent enrollment growth across quarters</div>", unsafe_allow_html=True)
 
 with c2:
-    rate = df_f["FullTimePlacement"].mean() * 100
-    st.markdown("<h3> Full-Time Placement Rate</h3>", unsafe_allow_html=True)
-    st.plotly_chart(create_gauge_chart(rate, "Overall Placement Success", [60,80]), use_container_width=True)
-    yoy = df_f.groupby("GraduationYear")["FullTimePlacement"].mean() * 100
-    change = yoy.iloc[-1] - yoy.iloc[-2] if len(yoy)>1 else 0
-    css = "metric-highlight" if change>=0 else "metric-danger"
-    st.markdown(f"<div class='kpi-insight'><strong>📊 Performance:</strong> <span class='{css}'>{change:+.1f}%</span> vs previous year<br><strong>🎯 Benchmark:</strong> Target ≥80% for program excellence</div>", unsafe_allow_html=True)
+   rate = df_f["FullTimePlacement"].mean() * 100
+   st.markdown("<h3 style='color:black;'> Full-Time Placement Rate</h3>", unsafe_allow_html=True)
+   st.plotly_chart(create_gauge_chart(rate, "Overall Placement Success", [60,80]), use_container_width=True)
+   yoy = df_f.groupby("GraduationYear")["FullTimePlacement"].mean() * 100
+   change = yoy.iloc[-1] - yoy.iloc[-2] if len(yoy)>1 else 0
+   css = "metric-highlight" if change>=0 else "metric-danger"
+   st.markdown(f"<div class='kpi-insight'><strong>📊 Performance:</strong> <span class='{css}'>{change:+.1f}%</span> vs previous year<br><strong>🎯 Benchmark:</strong> Target ≥80% for program excellence</div>", unsafe_allow_html=True)
 
 with c3:
-    med_gap = int(df_f["DaysToFullTimeJob"].dropna().median()) if not df_f["DaysToFullTimeJob"].dropna().empty else 0
-    st.markdown("<h3> Median Time-to-Employment</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h1>{med_gap}</h1>", unsafe_allow_html=True)
-    dist = df_f["DaysToFullTimeJob"].dropna().clip(upper=365)
-    hist = px.histogram(dist, nbins=15, opacity=.7, color_discrete_sequence=[hex_to_rgba(CLR_WARNING,.7)])
-    if len(dist)>0:
-        h,edges=np.histogram(dist,bins=15,range=(0,365),density=True)
-        centers=(edges[:-1]+edges[1:])/2
-        hist.add_scatter(x=centers,y=h*dist.value_counts().max()/max(h),mode="lines",line=dict(color=CLR_DANGER,width=2),name="Trend Line")
-    hist.update_layout(template="plotly_white",height=130,margin=dict(l=10,r=10,t=10,b=10),xaxis_title="Days",yaxis_title="Frequency",showlegend=False,paper_bgcolor="white",plot_bgcolor="white",font_color=CLR_TEXT)
-    hist.update_xaxes(tickfont=dict(color=CLR_TEXT),title_font=dict(color=CLR_TEXT))
-    hist.update_yaxes(tickfont=dict(color=CLR_TEXT),title_font=dict(color=CLR_TEXT))
-    st.plotly_chart(hist,use_container_width=True)
-    performance = "excellent" if med_gap<=90 else "good" if med_gap<=120 else "needs improvement"
-    st.markdown(f"<div class='kpi-insight'><strong>🎯 Assessment:</strong> {performance.title()} performance<br><strong>📊 Distribution:</strong> Most students secure employment within 6 months</div>", unsafe_allow_html=True)
+   med_gap = int(df_f["DaysToFullTimeJob"].dropna().median()) if not df_f["DaysToFullTimeJob"].dropna().empty else 0
+   st.markdown("<h3 style='color:black;'> Median Time-to-Employment</h3>", unsafe_allow_html=True)
+   st.markdown(f"<h1 style='color:black;'>{med_gap}</h1>", unsafe_allow_html=True)
+   dist = df_f["DaysToFullTimeJob"].dropna().clip(upper=365)
+   hist = px.histogram(dist, nbins=15, opacity=.7, color_discrete_sequence=[hex_to_rgba(CLR_WARNING,.7)])
+   if len(dist)>0:
+       h,edges=np.histogram(dist,bins=15,range=(0,365),density=True)
+       centers=(edges[:-1]+edges[1:])/2
+       hist.add_scatter(x=centers,y=h*dist.value_counts().max()/max(h),mode="lines",line=dict(color=CLR_DANGER,width=2),name="Trend Line")
+   hist.update_layout(template="plotly_white",height=130,margin=dict(l=10,r=10,t=10,b=10),xaxis_title="Days",yaxis_title="Frequency",showlegend=False,paper_bgcolor="white",plot_bgcolor="white",font_color=CLR_TEXT)
+   hist.update_xaxes(tickfont=dict(color=CLR_TEXT),title_font=dict(color=CLR_TEXT))
+   hist.update_yaxes(tickfont=dict(color=CLR_TEXT),title_font=dict(color=CLR_TEXT))
+   st.plotly_chart(hist,use_container_width=True)
+   performance = "excellent" if med_gap<=90 else "good" if med_gap<=120 else "needs improvement"
+   st.markdown(f"<div class='kpi-insight'><strong>🎯 Assessment:</strong> {performance.title()} performance<br><strong>📊 Distribution:</strong> Most students secure employment within 6 months</div>", unsafe_allow_html=True)
 
 with c4:
-    total_apps = df_f["ApplicationsSubmitted"].sum()
-    ipa = (df_f["InterviewInvites"].sum()/total_apps*100) if total_apps else 0
-    st.markdown("<h3> Interview Conversion Rate</h3>", unsafe_allow_html=True)
-    st.plotly_chart(create_gauge_chart(ipa, "Interviews per 100 Applications", [10,20], suffix=""), use_container_width=True)
-    avg_apps = df_f['ApplicationsSubmitted'].mean()
-    st.markdown(f"<div class='kpi-insight'><strong>📈 Activity:</strong> {avg_apps:.1f} avg applications per student<br><strong>💡 Insight:</strong> Higher conversion indicates quality applications and preparation</div>", unsafe_allow_html=True)
+   total_apps = df_f["ApplicationsSubmitted"].sum()
+   ipa = (df_f["InterviewInvites"].sum()/total_apps*100) if total_apps else 0
+   st.markdown("<h3 style='color:black;'> Interview Conversion Rate</h3>", unsafe_allow_html=True)
+   st.plotly_chart(create_gauge_chart(ipa, "Interviews per 100 Applications", [10,20], suffix=""), use_container_width=True)
+   avg_apps = df_f['ApplicationsSubmitted'].mean()
+   st.markdown(f"<div class='kpi-insight'><strong>📈 Activity:</strong> {avg_apps:.1f} avg applications per student<br><strong>💡 Insight:</strong> Higher conversion indicates quality applications and preparation</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='section-header'>🔄 Student Journey Pipeline & Academic Performance Analysis</div>", unsafe_allow_html=True)
 g1,g2 = st.columns([1,2], gap="medium")
@@ -310,12 +324,53 @@ with b1:
     st.markdown("<h3>Employment Timeline Analysis</h3>", unsafe_allow_html=True)
     sub1,sub2 = st.tabs(["Major Comparison","University Performance"])
     with sub1:
-        box = px.box(df_f.dropna(subset=["DaysToFullTimeJob"]), x="Major", y="DaysToFullTimeJob", color="Major", points="outliers")
-        box.update_layout(height=400,margin=dict(l=10,r=10,t=10,b=10),xaxis_title=None,xaxis_tickangle=-45,showlegend=False,paper_bgcolor="white",plot_bgcolor="white",font_color=CLR_TEXT)
-        box.update_xaxes(tickfont=dict(color=CLR_TEXT),title_font=dict(color=CLR_TEXT))
-        box.update_yaxes(tickfont=dict(color=CLR_TEXT),title_font=dict(color=CLR_TEXT))
-        st.plotly_chart(box,use_container_width=True)
-        st.markdown("<p class='caption'>Distribution of time-to-employment by major. Lower is better.</p>", unsafe_allow_html=True)
+    # drop any NaNs in DaysToFullTimeJob
+        df_clean = df_f.dropna(subset=["DaysToFullTimeJob"])
+
+        # compute counts
+        counts = df_clean["Major"].value_counts()
+        majors = counts.index.tolist()
+        # build labels like "Engineering (n=42)"
+        labels = [f"{m} (n={counts[m]})" for m in majors]
+
+        # draw the boxplot, preserving the order of majors
+        box = px.box(
+            df_clean,
+            x="Major",
+            y="DaysToFullTimeJob",
+            color="Major",
+            points="outliers",
+            category_orders={"Major": majors},
+        )
+
+        # update layout & axis
+        box.update_layout(
+            height=400,
+            margin=dict(l=10, r=10, t=10, b=10),
+            xaxis_title=None,
+            showlegend=False,
+            paper_bgcolor="white",
+            plot_bgcolor="white",
+            font_color=CLR_TEXT,
+        )
+        box.update_xaxes(
+            tickmode="array",
+            tickvals=majors,
+            ticktext=labels,
+            tickangle=-45,
+            tickfont=dict(color=CLR_TEXT),
+        )
+        box.update_yaxes(
+            title_text="Days",
+            tickfont=dict(color=CLR_TEXT),
+            title_font=dict(color=CLR_TEXT),
+        )
+
+        st.plotly_chart(box, use_container_width=True)
+        st.markdown(
+            "<p class='caption'>Distribution of time-to-employment by major. Lower is better.</p>",
+            unsafe_allow_html=True,
+        )
     with sub2:
         uni = df_f.groupby("University").agg(Students=("StudentID","count"),Placement=("FullTimePlacement","mean"),MedianDays=("DaysToFullTimeJob","median")).assign(Placement=lambda d:(d["Placement"]*100).round(1),MedianDays=lambda d:d["MedianDays"].fillna(-1).astype(int)).sort_values("Placement",ascending=False).head(10).reset_index()
         tbl = go.Figure(go.Table(header=dict(values=["University","Students","Placement %","Days to Job"],fill_color=CLR_ACCENT,align="left",font=dict(color=CLR_TEXT,family="Inter",size=14)),cells=dict(values=[uni[c] for c in uni.columns],fill_color=CLR_CARD,align="left",font=dict(color=CLR_TEXT,family="Inter"))))
