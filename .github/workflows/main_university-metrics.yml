@@ -1,4 +1,9 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+
 name: Build and deploy Python app to Azure Web App - University-Metrics
+
 on:
   push:
     branches:
@@ -9,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read #This is required for actions/checkout
     steps:
       - uses: actions/checkout@v4
       
@@ -17,11 +22,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          
-      - name: Extract application files
-        run: |
-          tar -xzf output.tar.gz
-          ls -la  # This will show what files were extracted
           
       - name: Create and start virtual environment
         run: |
@@ -32,6 +32,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
         
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
         
@@ -57,7 +59,25 @@ jobs:
           name: python-app
           
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: |
+          unzip release.zip
+          echo "=== Contents after unzip ==="
+          ls -la
+          echo "=== Looking for Python files ==="
+          find . -name "*.py" -type f | head -10
+          
+      - name: Extract any tar.gz files if they exist
+        run: |
+          if [ -f output.tar.gz ]; then
+            echo "Found output.tar.gz, extracting..."
+            tar -xzf output.tar.gz
+            echo "=== Contents after tar extraction ==="
+            ls -la
+            echo "=== Python files after extraction ==="
+            find . -name "*.py" -type f | head -10
+          else
+            echo "No output.tar.gz found, proceeding with current files"
+          fi
       
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
